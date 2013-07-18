@@ -1,10 +1,3 @@
-/*
-Write a program that uses placement new to place an array of two such structures in
-a buffer.Then assign values to the structure members (remembering to use
-strcpy()for the chararray) and use a loop to display the contents.Option 1 is to
-use a static array,like that in Listing 9.10,for the buffer.Option 2 is to use regular
-newto allocate the buffer.
-*/
 
 #include <iostream>
 #include <cstring>
@@ -35,6 +28,18 @@ int main(){
 	arr2[0].slag = 1;
 	strcpy(arr2[1].dross, "Arr2 Two");
 	arr2[1].slag = 2;
+
+	cout << "Array in static buffer:" << endl;
+	for(int i = 0; i < 2; i++){
+		cout << arr1[i].dross << " " << arr1[i].slag << endl;
+	}
+
+	cout << "Array in dynamic buffer:" << endl;
+	for(int i = 0; i < 2; i++){
+		cout << arr2[i].dross << " " << arr2[i].slag << endl;
+	}
+
+	cin.get();
 
 	return 0;
 }

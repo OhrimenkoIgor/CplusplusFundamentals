@@ -1,12 +1,6 @@
 #include <iostream>
 
 #include "golf.h"
-/*
-.For example,a loop should solicit input for an array of golf
-structures and terminate when the array is full or the user enters an empty string
-for the golfer’s name.The main()function should use only the prototyped func-
-tions to access the golf structures.
-*/
 
 int main(){
 
