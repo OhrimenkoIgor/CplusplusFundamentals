@@ -13,7 +13,7 @@ public:
 
 	static uint64_t get_file_size(std::wstring path);
 
-	static HANDLE start_thread_for_sum(std::wstring path);
+	static HANDLE start_thread_for_sum(wchar_t * path);
 };
 
 #endif //WINFILEUTILS_H_

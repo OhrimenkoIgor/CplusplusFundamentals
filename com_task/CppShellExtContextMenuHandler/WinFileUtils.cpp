@@ -1,4 +1,5 @@
 
+#include <cwchar>
 #include <fstream>
 #include <Windows.h>
 
@@ -56,13 +57,12 @@ DWORD WINAPI WinFileUtils::count_sum(LPVOID path){
 	return sum;
 }
 
-HANDLE WinFileUtils::start_thread_for_sum(std::wstring path){
-
+HANDLE WinFileUtils::start_thread_for_sum(wchar_t * path){
 	return CreateThread( 
             NULL,                   // default security attributes
             0,                      // use default stack size  
             WinFileUtils::count_sum,       // thread function name
-			path.c_str(),          // argument to thread function 
+			path,          // argument to thread function 
             0,                      // use default creation flags 
-            &dwThreadIdArray[i]);   // returns the thread identifier 
+            0);   // returns the thread identifier 
 }
