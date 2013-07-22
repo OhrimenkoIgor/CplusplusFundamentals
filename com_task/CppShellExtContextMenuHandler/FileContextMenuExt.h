@@ -32,6 +32,7 @@ WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <windows.h>
 #include <shlobj.h>     // For IShellExtInit and IContextMenu
 
+#include <string>
 
 class FileContextMenuExt : public IShellExtInit, public IContextMenu
 {
@@ -60,6 +61,7 @@ private:
 
     // The name of the selected file.
     wchar_t m_szSelectedFile[MAX_PATH];
+	std::wstring m_szSelectedFiles;
 
     // The method that handles the "display" verb.
     void OnVerbDisplayFileName(HWND hWnd);

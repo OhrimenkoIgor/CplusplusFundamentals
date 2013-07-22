@@ -40,13 +40,13 @@ extern long g_cDllRef;
 #define IDM_DISPLAY             0  // The command's identifier offset
 
 FileContextMenuExt::FileContextMenuExt(void) : m_cRef(1), 
-    m_pszMenuText(L"&Display File Name (C++)"),
+    m_pszMenuText(L"&List files (COM task)"),
     m_pszVerb("cppdisplay"),
     m_pwszVerb(L"cppdisplay"),
     m_pszVerbCanonicalName("CppDisplayFileName"),
     m_pwszVerbCanonicalName(L"CppDisplayFileName"),
-    m_pszVerbHelpText("Display File Name (C++)"),
-    m_pwszVerbHelpText(L"Display File Name (C++)")
+    m_pszVerbHelpText("List files (COM task)"),
+    m_pwszVerbHelpText(L"List files (COM task)")
 {
     InterlockedIncrement(&g_cDllRef);
 
@@ -73,7 +73,7 @@ void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 {
     wchar_t szMessage[300];
     if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage), 
-        L"The selected file is:\r\n\r\n%s", this->m_szSelectedFile)))
+		L"The selected file is:\r\n\r\n%s", this->m_szSelectedFiles.c_str())))
     {
         MessageBox(hWnd, szMessage, L"CppShellExtContextMenuHandler", MB_OK);
     }
@@ -140,20 +140,32 @@ IFACEMETHODIMP FileContextMenuExt::Initialize(
         HDROP hDrop = static_cast<HDROP>(GlobalLock(stm.hGlobal));
         if (hDrop != NULL)
         {
+			
             // Determine how many files are involved in this operation. This 
             // code sample displays the custom context menu item when only 
             // one file is selected. 
             UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
-            if (nFiles == 1)
+			
+            if (nFiles > 0)
             {
-                // Get the path of the file.
-                if (0 != DragQueryFile(hDrop, 0, m_szSelectedFile, 
-                    ARRAYSIZE(m_szSelectedFile)))
-                {
-                    hr = S_OK;
-                }
-            }
+				bool all_files_ok = true; //except folders
+				for(unsigned int i = 0; i < nFiles; i++){
+					// Get the path of the file.
+					if (0 != DragQueryFile(hDrop, i, m_szSelectedFile, 
+						ARRAYSIZE(m_szSelectedFile)))
+					{
+						//TODO to stl container
+						m_szSelectedFiles += m_szSelectedFile;
+						m_szSelectedFiles += L"\n";
 
+					} else {
+						all_files_ok = false;
+					}
+				}
+				if (all_files_ok) 
+					hr = S_OK; //mc
+            }			
+			
             GlobalUnlock(stm.hGlobal);
         }
 
@@ -198,12 +210,13 @@ IFACEMETHODIMP FileContextMenuExt::QueryContextMenu(
     mii.fType = MFT_STRING;
     mii.dwTypeData = m_pszMenuText;
     mii.fState = MFS_ENABLED;
-    mii.hbmpItem = static_cast<HBITMAP>(m_hMenuBmp);
+    //mii.hbmpItem = static_cast<HBITMAP>(m_hMenuBmp);
     if (!InsertMenuItem(hMenu, indexMenu, TRUE, &mii))
     {
         return HRESULT_FROM_WIN32(GetLastError());
     }
 
+	/*
     // Add a separator.
     MENUITEMINFO sep = { sizeof(sep) };
     sep.fMask = MIIM_TYPE;
@@ -212,6 +225,7 @@ IFACEMETHODIMP FileContextMenuExt::QueryContextMenu(
     {
         return HRESULT_FROM_WIN32(GetLastError());
     }
+	*/
 
     // Return an HRESULT value with the severity set to SEVERITY_SUCCESS. 
     // Set the code value to the offset of the largest command identifier 
