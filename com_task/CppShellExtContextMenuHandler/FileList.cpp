@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
 
 #include "WinFileUtils.h"
 #include "FileInfo.h"
@@ -42,7 +43,7 @@ void FileList::set_sum_for_each_file(){
             0,                      // use default stack size  
             WinFileUtils::count_sum,       // thread function name
 			const_cast<wchar_t *>(it->second.path_.c_str()),          // argument to thread function 
-            0,                      // use default creation flags 
+            STACK_SIZE_PARAM_IS_A_RESERVATION,                      // 
             0);   // returns the thread identifier 
 	}
 
@@ -52,6 +53,7 @@ void FileList::set_sum_for_each_file(){
 		 if (wait_result == WAIT_OBJECT_0){
 			 it->second.sum_ = (GetExitCodeThread(threads[i],  &file_sum)) ? it->second.sum_ = file_sum : 0;
 		 }
+		 CloseHandle(threads[i]);
 	}
 
 	delete [] threads;
@@ -61,7 +63,7 @@ std::wstring FileList::get_readable_list() const{
 	std::wostringstream files_list;
 
 	for(files_map::const_iterator it = files.begin(); it != files.end(); it++){
-		files_list << it->first << L"\t\t" << it->second.get_readable_size() << "\t\t" << it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
+		files_list << it->first << std::setw(25) << it->second.get_readable_size() << "\t\t" << it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
 	}
 
 	return files_list.str();

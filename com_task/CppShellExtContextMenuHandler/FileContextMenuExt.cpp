@@ -69,6 +69,25 @@ FileContextMenuExt::~FileContextMenuExt(void)
     InterlockedDecrement(&g_cDllRef);
 }
 
+LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+	switch(Msg)
+	{
+	case WM_INITDIALOG:
+		return TRUE;
+
+	case WM_COMMAND:
+		switch(wParam)
+		{
+		case IDOK:
+			EndDialog(hWndDlg, 0);
+			return TRUE;
+		}
+		break;
+	}
+
+	return FALSE;
+}
 
 void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 {
@@ -78,12 +97,13 @@ void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 	this->file_list.set_date_for_each_file();
 	this->file_list.set_sum_for_each_file();
 
-    if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage), 
-		L"Selected files are:\r\n\r\n%s", this->file_list.get_readable_list().c_str())))
-    {
-        MessageBox(hWnd, szMessage, L"List of selected files (COM task)", MB_OK);
+    //if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage), 
+	//	L"Selected files are:\r\n\r\n%s", this->file_list.get_readable_list().c_str())))
+    //{
+        MessageBox(hWnd, this->file_list.get_readable_list().c_str(), L"List of selected files (COM task)", MB_OK);
 		//DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutDlgProc);
-    }
+		//DialogBox(NULL, MAKEINTRESOURCE(IDD_DLGFIRST), NULL, reinterpret_cast<DLGPROC>(DlgProc));
+    //}
 }
 
 
