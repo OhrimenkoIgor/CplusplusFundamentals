@@ -45,11 +45,11 @@ DWORD WINAPI WinFileUtils::count_sum(LPVOID path){
 	DWORD w;
 	char * buf = (char *) &w;
 	std::ifstream file((wchar_t*)path, std::ios_base::binary | std::ios_base::in);
-	int nread;
+	std::streamsize nread;
 	while((nread = file.readsome(buf, size_dword)) == size_dword && file){
 		sum ^= w;
 	}
-	for(int i = nread; i < size_dword; i++){
+	for(std::streamsize i = nread; i < size_dword; i++){
 		buf[i] = 0;
 	}
 	sum ^= w;
@@ -57,12 +57,3 @@ DWORD WINAPI WinFileUtils::count_sum(LPVOID path){
 	return sum;
 }
 
-HANDLE WinFileUtils::start_thread_for_sum(wchar_t * path){
-	return CreateThread( 
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-            WinFileUtils::count_sum,       // thread function name
-			path,          // argument to thread function 
-            0,                      // use default creation flags 
-            0);   // returns the thread identifier 
-}

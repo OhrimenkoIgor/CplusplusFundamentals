@@ -4,16 +4,16 @@
 
 #include <string>
 #include <cstdint>
+#include <windows.h>
 
 class WinFileUtils{
-private:
-	static DWORD WINAPI count_sum(LPVOID path);
 public:
 	static SYSTEMTIME get_file_creation_date(std::wstring path);
 
 	static uint64_t get_file_size(std::wstring path);
 
-	static HANDLE start_thread_for_sum(wchar_t * path);
+	static DWORD WINAPI count_sum(LPVOID path);
+
 };
 
 #endif //WINFILEUTILS_H_
