@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <fstream>
 #include <iomanip>
 
 #include "WinFileUtils.h"
@@ -59,12 +60,21 @@ void FileList::set_sum_for_each_file(){
 	delete [] threads;
 }
 
+inline void save_to_file(const std::wstring & path, const std::wostringstream & str){
+	std::wofstream file(path + L"com_task.txt");
+	file << str.str();
+	file.close();
+}
+
 std::wstring FileList::get_readable_list() const{
 	std::wostringstream files_list;
 
 	for(files_map::const_iterator it = files.begin(); it != files.end(); it++){
-		files_list << it->first << std::setw(25) << it->second.get_readable_size() << "\t\t" << it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
+		files_list << std::setw(128) << std::left << it->first << std::setw(20) << it->second.get_readable_size() << it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
 	}
+
+	size_t found = files.begin()->second.path_.find_last_of(L"/\\");
+	save_to_file(files.begin()->second.path_.substr(0, found+1) ,files_list);
 
 	return files_list.str();
 }

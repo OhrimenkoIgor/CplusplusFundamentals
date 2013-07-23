@@ -27,7 +27,7 @@ std::wstring FileInfo::get_readable_time() const{
 	std::wostringstream ret;
 
 	ret << time_.wMonth << "/" << time_.wDay << "/" << time_.wYear << "\t"
-		<<  time_.wHour << ":" << time_.wMinute;
+		<< std::setfill(L'0') << std::setw(2) << time_.wHour << ":" << std::setfill(L'0') << std::setw(2) << time_.wMinute;
 
 	return ret.str();
 }

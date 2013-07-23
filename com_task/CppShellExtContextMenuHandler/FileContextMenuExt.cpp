@@ -91,7 +91,7 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 
 void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 {
-    wchar_t szMessage[300];
+    //wchar_t szMessage[300];
 
 	this->file_list.set_size_for_each_file();
 	this->file_list.set_date_for_each_file();
@@ -102,7 +102,11 @@ void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
     //{
         MessageBox(hWnd, this->file_list.get_readable_list().c_str(), L"List of selected files (COM task)", MB_OK);
 		//DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutDlgProc);
-		//DialogBox(NULL, MAKEINTRESOURCE(IDD_DLGFIRST), NULL, reinterpret_cast<DLGPROC>(DlgProc));
+		//INT_PTR ret = DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, NULL);
+		//if (ret == 0 || ret ==-1){
+		//	DWORD last_err = GetLastError();
+		//	int t = 0;
+		//}
     //}
 }
 
