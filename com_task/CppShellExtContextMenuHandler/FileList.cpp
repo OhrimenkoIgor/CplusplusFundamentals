@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <sstream>
 
 #include "WinFileUtils.h"
 #include "FileInfo.h"
@@ -56,6 +57,14 @@ void FileList::set_sum_for_each_file(){
 	delete [] threads;
 }
 
+std::wstring FileList::get_readable_list() const{
+	std::wostringstream files_list;
 
+	for(files_map::const_iterator it = files.begin(); it != files.end(); it++){
+		files_list << it->first << " " << it->second.size_ << " " << it->second.sum_ << std::endl;
+	}
+
+	return files_list.str();
+}
 
 
