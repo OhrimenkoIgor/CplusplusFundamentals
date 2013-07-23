@@ -35,7 +35,7 @@ std::wstring FileInfo::get_readable_time() const{
 std::wstring FileInfo::get_readable_sum() const{
 	std::wostringstream ret;
 
-	ret << L"0x" << std::uppercase << std::hex << sum_;
+	ret << L"0x" << std::uppercase << std::hex << std::setfill(L'0') << std::setw(8)<< sum_;
 
 	return ret.str();
 }

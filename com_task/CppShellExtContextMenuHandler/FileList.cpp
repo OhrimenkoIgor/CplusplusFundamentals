@@ -69,8 +69,12 @@ inline void save_to_file(const std::wstring & path, const std::wostringstream & 
 std::wstring FileList::get_readable_list() const{
 	std::wostringstream files_list;
 
-	for(files_map::const_iterator it = files.begin(); it != files.end(); it++){
-		files_list << std::setw(128) << std::left << it->first << std::setw(20) << it->second.get_readable_size() << it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
+	files_map::const_iterator it;
+	int i = 0;
+	for(it = files.begin(), i =0; it != files.end(); it++, i++){
+		if(i < 10 || i > files.size() - 10){
+			files_list << std::setw(128) << std::left << it->first << std::setw(20) << it->second.get_readable_size() << it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
+		}
 	}
 
 	size_t found = files.begin()->second.path_.find_last_of(L"/\\");
