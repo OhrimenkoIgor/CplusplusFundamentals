@@ -10,7 +10,7 @@
 void FileList::add_file(const FileInfo & file_info){
 	size_t found = file_info.path_.find_last_of(L"/\\");
 	std::wstring key = (found != std::wstring::npos) ? file_info.path_.substr(found+1) : file_info.path_;   
-	files.insert(files_map::value_type(key,file_info));
+	files.insert(std::pair<std::wstring, FileInfo>(key,file_info));
 }
 
 void FileList::set_time_for_file(files_map::value_type & el){
@@ -61,7 +61,7 @@ std::wstring FileList::get_readable_list() const{
 	std::wostringstream files_list;
 
 	for(files_map::const_iterator it = files.begin(); it != files.end(); it++){
-		files_list << it->first << " " << it->second.size_ << " " << it->second.sum_ << std::endl;
+		files_list << it->first << L"\t\t" << it->second.get_readable_size() << "\t\t" << it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
 	}
 
 	return files_list.str();

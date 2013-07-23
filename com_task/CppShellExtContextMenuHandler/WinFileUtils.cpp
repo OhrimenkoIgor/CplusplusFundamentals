@@ -41,14 +41,17 @@ uint64_t WinFileUtils::get_file_size(std::wstring path){
 
 DWORD WINAPI WinFileUtils::count_sum(LPVOID path){
 	DWORD sum = 0;
-	const int size_dword = sizeof(DWORD);
-	DWORD w;
+	const int size_dword = sizeof(DWORD );
+	DWORD  w;
 	char * buf = (char *) &w;
 	std::ifstream file((wchar_t*)path, std::ios_base::binary | std::ios_base::in);
+	if (!file) 
+		return 0;
 	std::streamsize nread;
-	while((nread = file.readsome(buf, size_dword)) == size_dword && file){
+	while(file.read(buf, size_dword)){
 		sum ^= w;
 	}
+	nread = file.gcount();
 	for(std::streamsize i = nread; i < size_dword; i++){
 		buf[i] = 0;
 	}

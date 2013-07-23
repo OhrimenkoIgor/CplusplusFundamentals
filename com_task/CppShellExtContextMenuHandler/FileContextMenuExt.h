@@ -34,6 +34,8 @@ WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include <string>
 
+#include "FileList.h"
+
 class FileContextMenuExt : public IShellExtInit, public IContextMenu
 {
 public:
@@ -61,7 +63,8 @@ private:
 
     // The name of the selected file.
     wchar_t m_szSelectedFile[MAX_PATH];
-	std::wstring m_szSelectedFiles;
+	//std::wstring m_szSelectedFiles;
+	FileList file_list;
 
     // The method that handles the "display" verb.
     void OnVerbDisplayFileName(HWND hWnd);

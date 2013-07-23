@@ -33,6 +33,7 @@ WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <Shlwapi.h>
 #pragma comment(lib, "shlwapi.lib")
 
+#include "FileInfo.h"
 
 extern HINSTANCE g_hInst;
 extern long g_cDllRef;
@@ -72,10 +73,16 @@ FileContextMenuExt::~FileContextMenuExt(void)
 void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 {
     wchar_t szMessage[300];
+
+	this->file_list.set_size_for_each_file();
+	this->file_list.set_date_for_each_file();
+	this->file_list.set_sum_for_each_file();
+
     if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage), 
-		L"The selected file is:\r\n\r\n%s", this->m_szSelectedFiles.c_str())))
+		L"Selected files are:\r\n\r\n%s", this->file_list.get_readable_list().c_str())))
     {
-        MessageBox(hWnd, szMessage, L"CppShellExtContextMenuHandler", MB_OK);
+        MessageBox(hWnd, szMessage, L"List of selected files (COM task)", MB_OK);
+		//DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutDlgProc);
     }
 }
 
@@ -155,8 +162,9 @@ IFACEMETHODIMP FileContextMenuExt::Initialize(
 						ARRAYSIZE(m_szSelectedFile)))
 					{
 						//TODO to stl container
-						m_szSelectedFiles += m_szSelectedFile;
-						m_szSelectedFiles += L"\n";
+						//m_szSelectedFiles += m_szSelectedFile;
+						//m_szSelectedFiles += L"\n";
+						this->file_list.add_file(FileInfo(m_szSelectedFile));
 
 					} else {
 						all_files_ok = false;
