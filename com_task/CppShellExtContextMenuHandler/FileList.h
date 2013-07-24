@@ -24,9 +24,12 @@ protected:
 	files_map files;
 	static void set_time_for_file(files_map::value_type & el);
 	static void set_size_for_file(files_map::value_type & el);
-	static VOID CALLBACK FileList::fill_file_info_and_file_callback(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work);
+	static VOID CALLBACK fill_file_info_callback(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work);
+	static VOID CALLBACK write_file_info_callback(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult);
+	static VOID CALLBACK wait_for_sums_callback(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult);
 
 	struct CallbackParameter;
+	struct SumsCallbackParameter;
 
 };
 

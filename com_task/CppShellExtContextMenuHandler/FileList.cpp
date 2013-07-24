@@ -85,11 +85,31 @@ std::wstring FileList::get_readable_list() const{
 }
 
 struct FileList::CallbackParameter{
-	HANDLE mutex;
+	std::wstring file_name;
+	HANDLE hevent;
 	FileInfo * p_file_info;
+	bool done;
+	HANDLE write_file_event;
+	std::wofstream * file; 
+
+	CallbackParameter(){
+		write_file_event = 0;
+	}
+	~CallbackParameter(){
+		if(write_file_event){
+			CloseHandle(write_file_event);
+		}
+	}
 };
 
-VOID CALLBACK FileList::fill_file_info_and_file_callback(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work){
+struct FileList::SumsCallbackParameter{
+	CallbackParameter * arr;
+	size_t size;
+	HANDLE hevent;
+	unsigned int item_to_write;
+};
+
+VOID CALLBACK FileList::fill_file_info_callback(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work){
 	CallbackParameter * param = reinterpret_cast<CallbackParameter *> (Parameter);
 
 	SYSTEMTIME sys_time = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -114,108 +134,118 @@ VOID CALLBACK FileList::fill_file_info_and_file_callback(PTP_CALLBACK_INSTANCE I
 
 	param->p_file_info->sum_ = WinFileUtils::count_sum(const_cast<wchar_t *>(param->p_file_info->path_.c_str()));
 
+	param->done = true;
+
+	SetEvent(param->hevent);
+
 	return;
+}
+
+VOID CALLBACK FileList::write_file_info_callback( PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult){
+	CallbackParameter * param = reinterpret_cast<CallbackParameter *> (Parameter);
+
+	(*param->file) << std::setw(128) << std::left << param->file_name << std::setw(20) << param->p_file_info->get_readable_size() 
+				<< param->p_file_info->get_readable_time() << "\t" << param->p_file_info->get_readable_sum() << std::endl;
+
+}
+
+VOID CALLBACK FileList::wait_for_sums_callback( PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult){
+	SumsCallbackParameter * param = reinterpret_cast<SumsCallbackParameter *> (Parameter);
+
+	while(param->arr[param->item_to_write].done && param->item_to_write < param->size){
+		SetEvent(param->arr[param->item_to_write].write_file_event);
+		param->item_to_write++;
+	}
+	
+	if(param->item_to_write != param->size){
+		SetThreadpoolWait(Wait, param->hevent, NULL);
+	}
 }
 
 void FileList::fill_files_info_and_file(){
 	BOOL bRet = FALSE;
 	PTP_WORK work = NULL;
-	PTP_TIMER timer = NULL;
 	PTP_POOL pool = NULL;
-	PTP_WORK_CALLBACK workcallback = FileList::fill_file_info_and_file_callback;
-	//PTP_TIMER_CALLBACK timercallback = MyTimerCallback;
+	PTP_WORK_CALLBACK workcallback = FileList::fill_file_info_callback;
+	PTP_WAIT wait = NULL, wait_sums = NULL;
+    PTP_WAIT_CALLBACK waitcallback = FileList::write_file_info_callback;
+	PTP_WAIT_CALLBACK wait_sums_callback = FileList::wait_for_sums_callback;
 	TP_CALLBACK_ENVIRON CallBackEnviron;
 	PTP_CLEANUP_GROUP cleanupgroup = NULL;
-	HANDLE ghMutex;
+	HANDLE hEvent;
 
 	InitializeThreadpoolEnvironment(&CallBackEnviron);
 
-	//
-	// Create a custom, dedicated thread pool.
-	//
 	pool = CreateThreadpool(NULL);
 	if (NULL == pool) {
 		return;
 	}
-
-	//
-	// The thread pool is made persistent simply by setting
-	// both the minimum and maximum threads to 1.
-	//
+	
 	SetThreadpoolThreadMaximum(pool, 2);
-
 	bRet = SetThreadpoolThreadMinimum(pool, 1);
-
 	if (FALSE == bRet) {
 		CloseThreadpool(pool);
 		return;
 	}
 
-	//
-	// Create a cleanup group for this thread pool.
-	//
 	cleanupgroup = CreateThreadpoolCleanupGroup();
-
 	if (NULL == cleanupgroup) {
 		CloseThreadpool(pool);
 		return;
 	}
 
-	//
-	// Associate the callback environment with our thread pool.
-	//
 	SetThreadpoolCallbackPool(&CallBackEnviron, pool);
+	SetThreadpoolCallbackCleanupGroup(&CallBackEnviron, cleanupgroup, NULL);
 
-	//
-	// Associate the cleanup group with our thread pool.
-	// Objects created with the same callback environment
-	// as the cleanup group become members of the cleanup group.
-	//
-	SetThreadpoolCallbackCleanupGroup(&CallBackEnviron,
-		cleanupgroup,
-		NULL);
+	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (NULL == hEvent) {
+        // Error Handling
+        return;
+    }
 
-	ghMutex = CreateMutex( 
-		NULL,              // default security attributes
-		FALSE,             // initially not owned
-		NULL);             // unnamed mutex
+	size_t found = files.begin()->second.path_.find_last_of(L"/\\");
+	std::wofstream file(files.begin()->second.path_.substr(0, found+1) + L"com_task_2.txt");
 
 	int i = 0;
 	files_map::iterator it;
 	CallbackParameter * params = new CallbackParameter[files.size()];
+	SumsCallbackParameter sums_par = {params, files.size(), hEvent, 0};
+	wait_sums = CreateThreadpoolWait(wait_sums_callback, &sums_par, NULL);
+	SetThreadpoolWait(wait_sums, hEvent, NULL);
+
 	for(it = files.begin(), i =0; it != files.end(); it++, i++){
 
-		params[i].mutex = ghMutex;
+		params[i].file_name = it->first;
+		params[i].hevent = hEvent;
 		params[i].p_file_info = &it->second;
+		params[i].done = false;
+		params[i].write_file_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+		params[i].file = &file;
 
 		work = CreateThreadpoolWork(workcallback, &params[i], &CallBackEnviron);
-		if (NULL == work) {
-			CloseThreadpoolCleanupGroup(cleanupgroup);
+		//wait = CreateThreadpoolWait(waitcallback, &params[i], &CallBackEnviron);
+		if (NULL == work || NULL == wait) {
 			delete [] params;
-			CloseHandle(ghMutex);
+			CloseHandle(hEvent);
+			CloseThreadpool(pool);
+			file.close();
 			return;
 		}
-
 		SubmitThreadpoolWork(work);
+		//SetThreadpoolWait(wait,  &params[i].write_file_event, NULL);
 	}
 
-	//
-	// Wait for all callbacks to finish.
-	// CloseThreadpoolCleanupGroupMembers also releases objects
-	// that are members of the cleanup group, so it is not necessary 
-	// to call close functions on individual objects 
-	// after calling CloseThreadpoolCleanupGroupMembers.
-	//
-	CloseThreadpoolCleanupGroupMembers(cleanupgroup,
-		FALSE,
-		NULL);
+	CloseThreadpoolCleanupGroupMembers(cleanupgroup, FALSE,	NULL);
 
+    SetThreadpoolWait(wait_sums, NULL, NULL);
+    CloseThreadpoolWait(wait_sums);
 
 	delete [] params;
-	CloseHandle(ghMutex);
+	CloseHandle(hEvent);
 	// Clean up the cleanup group.
 	CloseThreadpoolCleanupGroup(cleanupgroup);
 	CloseThreadpool(pool);
+	file.close();
 	return;
 }
 
