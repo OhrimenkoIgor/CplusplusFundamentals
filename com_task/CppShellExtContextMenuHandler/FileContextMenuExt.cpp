@@ -93,9 +93,11 @@ void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 {
     //wchar_t szMessage[300];
 
-	this->file_list.set_size_for_each_file();
-	this->file_list.set_date_for_each_file();
-	this->file_list.set_sum_for_each_file();
+	//this->file_list.set_size_for_each_file();
+	//this->file_list.set_date_for_each_file();
+	//this->file_list.set_sum_for_each_file();
+
+	this->file_list.fill_files_info_and_file();
 
     //if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage), 
 	//	L"Selected files are:\r\n\r\n%s", this->file_list.get_readable_list().c_str())))
