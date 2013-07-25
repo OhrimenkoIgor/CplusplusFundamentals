@@ -78,8 +78,8 @@ std::wstring FileList::get_readable_list() const{
 		}
 	}
 
-	//size_t found = files.begin()->second.path_.find_last_of(L"/\\");
-	//save_to_file(files.begin()->second.path_.substr(0, found+1) ,files_list);
+	size_t found = files.begin()->second.path_.find_last_of(L"/\\");
+	save_to_file(files.begin()->second.path_.substr(0, found+1) ,files_list);
 
 	return files_list.str();
 }
@@ -142,10 +142,8 @@ VOID CALLBACK FileList::wait_for_sums_callback( PTP_CALLBACK_INSTANCE Instance, 
 
 	while(param->item_to_write < param->size && param->arr[param->item_to_write].done){
 		if (WAIT_OBJECT_0 == WaitForSingleObject(param->hmutex, INFINITE)){
-			std::wostringstream str;
-			str << std::setw(128) << std::left << param->arr[param->item_to_write].file_name << std::setw(20) <<  param->arr[param->item_to_write].p_file_info->get_readable_size() 
+			(*param->file) << std::setw(128) << std::left << param->arr[param->item_to_write].file_name << std::setw(20) <<  param->arr[param->item_to_write].p_file_info->get_readable_size() 
 				<<  param->arr[param->item_to_write].p_file_info->get_readable_time() << "\t" <<  param->arr[param->item_to_write].p_file_info->get_readable_sum() << std::endl;
-			(*param->file) << str.str();
 			param->item_to_write++;
 			ReleaseMutex(param->hmutex);
 		}
