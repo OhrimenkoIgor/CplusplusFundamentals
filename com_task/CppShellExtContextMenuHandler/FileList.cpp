@@ -69,17 +69,24 @@ inline void save_to_file(const std::wstring & path, const std::wostringstream & 
 std::wstring FileList::get_readable_list() const{
 	std::wostringstream files_list;
 
+	bool Ellipsis = false;
+
 	files_map::const_iterator it;
 	int i = 0;
 	for(it = files.begin(), i =0; it != files.end(); it++, i++){
-		if(i < 10 || i > files.size() - 10){
+		if(i < 10 || i > files.size() - 1 - 10){
 			files_list << std::setw(128) << std::left << it->first << std::setw(20) << it->second.get_readable_size() 
 				<< it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
+		} else{
+			if(!Ellipsis){
+				files_list << L"..." << std::endl;
+				Ellipsis = true;
+			}
 		}
 	}
 
-	size_t found = files.begin()->second.path_.find_last_of(L"/\\");
-	save_to_file(files.begin()->second.path_.substr(0, found+1) ,files_list);
+	//size_t found = files.begin()->second.path_.find_last_of(L"/\\");
+	//save_to_file(files.begin()->second.path_.substr(0, found+1) ,files_list);
 
 	return files_list.str();
 }
@@ -202,7 +209,7 @@ void FileList::fill_files_info_and_file(){
 
 	size_t found = files.begin()->second.path_.find_last_of(L"/\\");
 	std::wstring directory = files.begin()->second.path_.substr(0, found+1);
-	std::wofstream file(directory + L"com_task_2.txt", std::ofstream::out | std::ofstream::trunc);
+	std::wofstream file(directory + L"com_task_2.txt", std::wofstream::out | std::wofstream::trunc);
 	if(!file.is_open()){
 		CloseThreadpool(pool);
         return;

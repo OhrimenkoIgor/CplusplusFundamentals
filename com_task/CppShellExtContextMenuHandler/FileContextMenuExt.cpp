@@ -96,6 +96,7 @@ void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 	//this->file_list.set_size_for_each_file();
 	//this->file_list.set_date_for_each_file();
 	//this->file_list.set_sum_for_each_file();
+	std::locale::global(std::locale("Rus"));
 
 	this->file_list.fill_files_info_and_file();
 
