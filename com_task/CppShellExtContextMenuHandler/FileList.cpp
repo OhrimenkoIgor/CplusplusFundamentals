@@ -143,10 +143,10 @@ VOID CALLBACK FileList::fill_file_info_callback(PTP_CALLBACK_INSTANCE Instance, 
 }
 
 VOID CALLBACK FileList::write_file_info_callback( PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult){
-	//CallbackParameter * param = reinterpret_cast<CallbackParameter *> (Parameter);
+	CallbackParameter * param = reinterpret_cast<CallbackParameter *> (Parameter);
 
-	//(*param->file) << std::setw(128) << std::left << param->file_name << std::setw(20) << param->p_file_info->get_readable_size() 
-	//			<< param->p_file_info->get_readable_time() << "\t" << param->p_file_info->get_readable_sum() << std::endl;
+	(*param->file) << std::setw(128) << std::left << param->file_name << std::setw(20) << param->p_file_info->get_readable_size() 
+				<< param->p_file_info->get_readable_time() << "\t" << param->p_file_info->get_readable_sum() << std::endl;
 
 }
 
