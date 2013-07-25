@@ -94,6 +94,7 @@ struct FileList::CallbackParameter{
 
 	CallbackParameter(){
 		write_file_event = 0;
+		done = false;
 	}
 	~CallbackParameter(){
 		if(write_file_event){
@@ -142,10 +143,10 @@ VOID CALLBACK FileList::fill_file_info_callback(PTP_CALLBACK_INSTANCE Instance, 
 }
 
 VOID CALLBACK FileList::write_file_info_callback( PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult){
-	CallbackParameter * param = reinterpret_cast<CallbackParameter *> (Parameter);
+	//CallbackParameter * param = reinterpret_cast<CallbackParameter *> (Parameter);
 
-	(*param->file) << std::setw(128) << std::left << param->file_name << std::setw(20) << param->p_file_info->get_readable_size() 
-				<< param->p_file_info->get_readable_time() << "\t" << param->p_file_info->get_readable_sum() << std::endl;
+	//(*param->file) << std::setw(128) << std::left << param->file_name << std::setw(20) << param->p_file_info->get_readable_size() 
+	//			<< param->p_file_info->get_readable_time() << "\t" << param->p_file_info->get_readable_sum() << std::endl;
 
 }
 
@@ -157,7 +158,7 @@ VOID CALLBACK FileList::wait_for_sums_callback( PTP_CALLBACK_INSTANCE Instance, 
 		param->item_to_write++;
 	}
 	
-	if(param->item_to_write != param->size){
+	if(param->item_to_write < param->size){
 		SetThreadpoolWait(Wait, param->hevent, NULL);
 	}
 }
@@ -200,15 +201,22 @@ void FileList::fill_files_info_and_file(){
 	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (NULL == hEvent) {
         // Error Handling
+		CloseThreadpool(pool);
         return;
     }
 
 	size_t found = files.begin()->second.path_.find_last_of(L"/\\");
-	std::wofstream file(files.begin()->second.path_.substr(0, found+1) + L"com_task_2.txt");
+	std::wstring directory = files.begin()->second.path_.substr(0, found+1);
+	std::wofstream file(directory + L"com_task_2.txt", std::ofstream::out | std::ofstream::trunc);
+	if(!file.is_open()){
+		CloseThreadpool(pool);
+        return;
+	}
 
 	int i = 0;
 	files_map::iterator it;
 	CallbackParameter * params = new CallbackParameter[files.size()];
+	PTP_WAIT * write_file_wait = new PTP_WAIT[files.size()];
 	SumsCallbackParameter sums_par = {params, files.size(), hEvent, 0};
 	wait_sums = CreateThreadpoolWait(wait_sums_callback, &sums_par, NULL);
 	SetThreadpoolWait(wait_sums, hEvent, NULL);
@@ -218,28 +226,36 @@ void FileList::fill_files_info_and_file(){
 		params[i].file_name = it->first;
 		params[i].hevent = hEvent;
 		params[i].p_file_info = &it->second;
-		params[i].done = false;
 		params[i].write_file_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 		params[i].file = &file;
 
 		work = CreateThreadpoolWork(workcallback, &params[i], &CallBackEnviron);
-		//wait = CreateThreadpoolWait(waitcallback, &params[i], &CallBackEnviron);
+		write_file_wait[i] = CreateThreadpoolWait(waitcallback, &params[i], NULL);
 		if (NULL == work || NULL == wait) {
 			delete [] params;
+			delete []  write_file_wait;
 			CloseHandle(hEvent);
 			CloseThreadpool(pool);
 			file.close();
 			return;
 		}
 		SubmitThreadpoolWork(work);
-		//SetThreadpoolWait(wait,  &params[i].write_file_event, NULL);
+		SetThreadpoolWait(write_file_wait[i],  &params[i].write_file_event, NULL);
 	}
 
 	CloseThreadpoolCleanupGroupMembers(cleanupgroup, FALSE,	NULL);
 
+	for(int i = 0; i < files.size(); i++){
+		WaitForThreadpoolWaitCallbacks(write_file_wait[i], FALSE);
+		SetThreadpoolWait(write_file_wait[i], NULL, NULL);
+        CloseThreadpoolWait(write_file_wait[i]);
+	}
+
+	WaitForThreadpoolWaitCallbacks(wait_sums, FALSE);
     SetThreadpoolWait(wait_sums, NULL, NULL);
     CloseThreadpoolWait(wait_sums);
 
+	delete [] write_file_wait;
 	delete [] params;
 	CloseHandle(hEvent);
 	// Clean up the cleanup group.
