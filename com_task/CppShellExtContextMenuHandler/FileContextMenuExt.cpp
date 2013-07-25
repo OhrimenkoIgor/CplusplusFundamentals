@@ -96,8 +96,8 @@ void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 	//this->file_list.set_size_for_each_file();
 	//this->file_list.set_date_for_each_file();
 	//this->file_list.set_sum_for_each_file();
-	std::locale::global(std::locale("Rus"));
-
+	
+	//All work for filling file information fields
 	this->file_list.fill_files_info_and_file();
 
     //if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage), 
@@ -188,9 +188,7 @@ IFACEMETHODIMP FileContextMenuExt::Initialize(
 					if (0 != DragQueryFile(hDrop, i, m_szSelectedFile, 
 						ARRAYSIZE(m_szSelectedFile)))
 					{
-						//TODO to stl container
-						//m_szSelectedFiles += m_szSelectedFile;
-						//m_szSelectedFiles += L"\n";
+						//Fill container with paths to all files
 						this->file_list.add_file(FileInfo(m_szSelectedFile));
 
 					} else {
@@ -198,7 +196,7 @@ IFACEMETHODIMP FileContextMenuExt::Initialize(
 					}
 				}
 				if (all_files_ok) 
-					hr = S_OK; //mc
+					hr = S_OK;
             }			
 			
             GlobalUnlock(stm.hGlobal);
