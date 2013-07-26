@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{5A6C3EE2-91D2-4371-8911-D1ACB4161C89}</ProjectGuid>
+    <ProjectGuid>{46241603-5D3B-4330-B010-F5DE7865A73A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>task1</RootNamespace>
+    <RootNamespace>task2</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -74,11 +74,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="cow.cpp" />
-    <ClCompile Include="task1.cpp" />
+    <ClCompile Include="string1.cpp" />
+    <ClCompile Include="string2.cpp" />
+    <ClCompile Include="task2.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cow.h" />
+    <ClInclude Include="string2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

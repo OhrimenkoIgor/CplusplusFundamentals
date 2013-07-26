@@ -15,15 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="task1.cpp">
+    <ClCompile Include="task2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cow.cpp">
+    <ClCompile Include="string1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cow.h">
+    <ClInclude Include="string2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
