@@ -1,12 +1,12 @@
 
 #include "vintageport.h"
 
-VintagePort::VintagePort() : year(0) {
+VintagePort::VintagePort() : year(0), Port("none", "vintage") {
 	nickname = new char[1];
 	nickname[0] = '\0';
 }
 
-VintagePort::VintagePort(const char * br, int b, const char * nn, int y) : Port(br, "", b), year(y) {
+VintagePort::VintagePort(const char * br, int b, const char * nn, int y) : Port(br, "vintage", b), year(y) {
 	if(nn){
 		nickname = new char[strlen(nn) + 1];
 		strcpy(nickname, nn);

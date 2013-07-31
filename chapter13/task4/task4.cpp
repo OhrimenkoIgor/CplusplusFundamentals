@@ -1,30 +1,77 @@
 
 /*
-TheShow() method presents information in the following format:
-Brand: Gallo
-Kind: tawny
-Bottles: 20
-The operator<<() function presents information in the following format (with no
-newline character at the end):
-Gallo, tawny, 20
 
-The Port master completed the method definitions for thePortclass and then
-derived the VintagePort class as follows before being relieved of his position for
-accidentally routing a bottl eof’45 Cockburn to someone preparing an experimen-
-tal barbecue sauce:
+b. 
+	void Show() const; //virtual, need to show another content
+c.
+	operator=(); //assignment operator is not inherited
+	operator<<(); //friends are not inherited
 
-You get the job of completing the VintagePortwork.
-a. Your first task is to re-create the Portmethod definitions because the former
-Portmaster immolated his upon being relieved.
-b. Yoursecondtaskis toexplainwhycertainmethodsareredefinedandothers
-arenot.
-c. Your third task is to explain why operator=()andoperator<<()are not
-virtual.
-d. Yourfourth task is to provide definitions for the VintagePortmethods.
- 
 */
 
-int main(){
+#include <iostream>
+#include <string>
 
+#include "vintageport.h"
+
+const int NUM = 4;
+
+int main(){
+	using std::cin;
+	using std::cout;
+	using std::endl;
+	Port * p_port[NUM];
+	std::string tbrand, tstyle, tnickname;
+	int tbottles, tyear;
+	for (int i = 0; i < NUM; i++)
+	{
+		cout << "Enter brand: ";
+		getline(cin, tbrand);
+
+		cout << "Enter style: ";
+		getline(cin, tstyle);
+
+		cout << "Enter bottles: ";
+		while (!(cin >> tbottles)) {
+			cin.clear();
+			while (cin.get() != '\n')
+				continue;
+			cout << "Please enter a number: ";
+		}
+		while (cin.get() != '\n'); //new line
+
+		if(tstyle != "vintage"){
+			p_port[i] = new Port(tbrand.c_str(), tstyle.c_str(), tbottles);;
+		} else {
+			cout << "Enter nickname: ";
+			getline(cin, tnickname);
+
+			cout << "Enter year: ";
+			while (!(cin >> tyear)) {
+				cin.clear();
+				while (cin.get() != '\n')
+					continue;
+				cout << "Please enter a number: ";
+			}
+			while (cin.get() != '\n'); //new line
+
+			p_port[i] = new VintagePort(tbrand.c_str(), tbottles, tnickname.c_str(), tyear);
+		}			
+		while (cin.get() != '\n')
+			continue;
+	}
+	cout << endl;
+	for (int i = 0; i < NUM; i++)
+	{
+		p_port[i]->Show();
+		cout << endl;
+	}
+	for (int i = 0; i < NUM; i++)
+	{
+		delete p_port[i]; // free memory
+	}
+	cout << "Done.\n";
+
+	cin.get();
 	return 0;
 }
