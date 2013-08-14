@@ -36,6 +36,8 @@ WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "FileList.h"
 
+//#pragma comment(lib,"fileinfo.lib")
+
 class FileContextMenuExt : public IShellExtInit, public IContextMenu
 {
 public:

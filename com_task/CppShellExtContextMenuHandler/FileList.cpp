@@ -73,7 +73,7 @@ std::wstring FileList::get_readable_list() const{
 	bool Ellipsis = false;
 
 	files_map::const_iterator it;
-	int i = 0;
+	unsigned int i = 0;
 
 	//iterate container and collect all information about files in one wstring
 	for(it = files.begin(), i =0; it != files.end(); it++, i++){

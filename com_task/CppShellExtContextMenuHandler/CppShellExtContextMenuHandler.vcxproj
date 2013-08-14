@@ -158,11 +158,8 @@
   <ItemGroup>
     <ClInclude Include="ClassFactory.h" />
     <ClInclude Include="FileContextMenuExt.h" />
-    <ClInclude Include="FileInfo.h" />
-    <ClInclude Include="FileList.h" />
     <ClInclude Include="Reg.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="WinFileUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClassFactory.cpp" />
@@ -181,13 +178,15 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FileContextMenuExt.cpp" />
-    <ClCompile Include="FileInfo.cpp" />
-    <ClCompile Include="FileList.cpp" />
     <ClCompile Include="Reg.cpp" />
-    <ClCompile Include="WinFileUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CppShellExtContextMenuHandler.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\fileinfo\fileinfo.vcxproj">
+      <Project>{55fef2f1-0410-4359-906e-4f1a40393bb0}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
