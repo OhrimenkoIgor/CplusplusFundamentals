@@ -14,8 +14,8 @@
 struct FileInfo{
 	std::wstring path_;
 	uint64_t size_;
-	SYSTEMTIME time_;
-	DWORD sum_;
+	std::wstring time_;
+	uint32_t sum_;
 
 	FileInfo(std::wstring path = L"");
 
