@@ -1,101 +1,20 @@
 
+#if defined _WIN32 || defined _WIN64
+
 #include <algorithm>
 #include <sstream>
 #include <fstream>
 #include <iomanip>
 #include <clocale>
 
+#include "FileUtils.h"
 #include "WinFileUtils.h"
 #include "FileInfo.h"
 
-#include "FileList.h"
-
-void FileList::add_file(const FileInfo & file_info){
-	//retreive filename prom path
-	size_t found = file_info.path_.find_last_of(L"/\\");
-	std::wstring key = (found != std::wstring::npos) ? file_info.path_.substr(found+1) : file_info.path_;
-	//add pair to map
-	files.insert(std::pair<std::wstring, FileInfo>(key,file_info));
-}
-
-//function for std::for_each
-void FileList::set_time_for_file(files_map::value_type & el){
-	el.second.time_ = WinFileUtils::get_file_creation_date(el.second.path_);
-}
-
-void FileList::set_date_for_each_file(){
-	for_each(files.begin(), files.end(), FileList::set_time_for_file);
-}
-
-//function for std::for_each
-void FileList::set_size_for_file(files_map::value_type & el){
-	el.second.size_ = WinFileUtils::get_file_size(el.second.path_);
-}
-
-void FileList::set_size_for_each_file(){
-	for_each(files.begin(), files.end(), FileList::set_size_for_file);
-}
-
-void FileList::set_sum_for_each_file(){
-	size_t map_size = files.size();
-	HANDLE * threads = new HANDLE[map_size];
-	int i;
-	files_map::iterator it;
-
-	//start thread per file
-	for(it = files.begin(), i = 0; it != files.end(); it++, i++){
-		threads[i] = CreateThread( 
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-            WinFileUtils::count_sum,       // thread function name
-			const_cast<wchar_t *>(it->second.path_.c_str()),          // argument to thread function 
-            STACK_SIZE_PARAM_IS_A_RESERVATION,                      // 
-            0);   // returns the thread identifier 
-	}
-
-	//wait for threads to finish
-	DWORD wait_result, file_sum;
-	for(it = files.begin(), i = 0; it != files.end(); it++, i++){
-		 wait_result = WaitForSingleObject(threads[i], INFINITE);
-		 if (wait_result == WAIT_OBJECT_0){
-			 //retreive thread return value (check sum)
-			 it->second.sum_ = (GetExitCodeThread(threads[i],  &file_sum)) ? it->second.sum_ = file_sum : 0;
-		 }
-		 CloseHandle(threads[i]);
-	}
-
-	delete [] threads;
-}
-
-std::wstring FileList::get_readable_list() const{
-	std::wostringstream files_list;
-
-	bool Ellipsis = false;
-
-	files_map::const_iterator it;
-	unsigned int i = 0;
-
-	//iterate container and collect all information about files in one wstring
-	for(it = files.begin(), i =0; it != files.end(); it++, i++){
-		//process only first 10 and last 10 files
-		if(i < 10 || i > files.size() - 1 - 10){
-			//line per file
-			files_list << std::setw(128) << std::left << it->first << std::setw(20) << it->second.get_readable_size() 
-				<< it->second.get_readable_time() << "\t" << it->second.get_readable_sum() << std::endl;
-		} else{
-			if(!Ellipsis){
-				//put elipsis in the middle
-				files_list << L"..." << std::endl;
-				Ellipsis = true;
-			}
-		}
-	}
-
-	return files_list.str();
-}
+#include "WinFileList.h"
 
 //structure for thread pool work callback argument
-struct FileList::CallbackParameter{
+struct WinFileList::CallbackParameter{
 	std::wstring file_name; //filename
 	HANDLE hevent;			//event to trigger
 	FileInfo * p_file_info;	//pointer to file_info in map to fill
@@ -108,8 +27,8 @@ struct FileList::CallbackParameter{
 };
 
 //structure for thread pool wait callback argument
-struct FileList::SumsCallbackParameter{
-	CallbackParameter * arr; //pointer to file_infos for printing to file
+struct WinFileList::SumsCallbackParameter{
+	WinFileList::CallbackParameter * arr; //pointer to file_infos for printing to file
 	size_t size;			//size of container
 	HANDLE hevent;			//event to set to wait
 	HANDLE hmutex;			//mutex for synchronization of file write 
@@ -117,7 +36,7 @@ struct FileList::SumsCallbackParameter{
 	std::wofstream * file;	//pointer to file output stream to write
 };
 
-VOID CALLBACK FileList::fill_file_info_callback(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work){
+VOID CALLBACK WinFileList::fill_file_info_callback(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work){
 	CallbackParameter * param = reinterpret_cast<CallbackParameter *> (Parameter);
 
 	SYSTEMTIME sys_time = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -135,14 +54,14 @@ VOID CALLBACK FileList::fill_file_info_callback(PTP_CALLBACK_INSTANCE Instance, 
 			if(res){
 				res = FileTimeToSystemTime(&local_time, &sys_time);
 				if (res){
-					param->p_file_info->time_ = sys_time;
+					param->p_file_info->time_ = WinFileUtils::systime2wstr(sys_time);
 				}
 			}
 		}
 	}
 
 	//count check sum
-	param->p_file_info->sum_ = WinFileUtils::count_sum(const_cast<wchar_t *>(param->p_file_info->path_.c_str()));
+	param->p_file_info->sum_ = FileUtils::count_sum(param->p_file_info->path_);
 
 	//done
 	param->done = true;
@@ -153,7 +72,7 @@ VOID CALLBACK FileList::fill_file_info_callback(PTP_CALLBACK_INSTANCE Instance, 
 	return;
 }
 
-VOID CALLBACK FileList::wait_for_sums_callback( PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult){
+VOID CALLBACK WinFileList::wait_for_sums_callback( PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult){
 	SumsCallbackParameter * param = reinterpret_cast<SumsCallbackParameter *> (Parameter);
 
 	//write info about all files, that are processed by the moment, but info is not written
@@ -177,13 +96,13 @@ VOID CALLBACK FileList::wait_for_sums_callback( PTP_CALLBACK_INSTANCE Instance, 
 	}
 }
 
-void FileList::fill_files_info_and_file(){
+void WinFileList::fill_files_info_and_file(){
 	BOOL bRet = FALSE;
 	PTP_WORK work = NULL;
 	PTP_POOL pool = NULL;
-	PTP_WORK_CALLBACK workcallback = FileList::fill_file_info_callback;
+	PTP_WORK_CALLBACK workcallback = WinFileList::fill_file_info_callback;
 	PTP_WAIT wait = NULL, wait_sums = NULL;
-	PTP_WAIT_CALLBACK wait_sums_callback = FileList::wait_for_sums_callback;
+	PTP_WAIT_CALLBACK wait_sums_callback = WinFileList::wait_for_sums_callback;
 	TP_CALLBACK_ENVIRON CallBackEnviron;
 	PTP_CLEANUP_GROUP cleanupgroup = NULL;
 	HANDLE hEvent, hMutex;
@@ -295,4 +214,4 @@ void FileList::fill_files_info_and_file(){
 	return;
 }
 
-
+#endif //defined _WIN32 || defined _WIN64

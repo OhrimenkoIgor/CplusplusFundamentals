@@ -127,14 +127,24 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\CppShellExtContextMenuHandler\FileInfo.h" />
-    <ClInclude Include="..\CppShellExtContextMenuHandler\FileList.h" />
-    <ClInclude Include="..\CppShellExtContextMenuHandler\WinFileUtils.h" />
+    <ClInclude Include="FileInfo.h" />
+    <ClInclude Include="FileList.h" />
+    <ClInclude Include="FileListFactory.h" />
+    <ClInclude Include="FileUtils.h" />
+    <ClInclude Include="LinuxFileList.h" />
+    <ClInclude Include="LinuxFileUtils.h" />
+    <ClInclude Include="WinFileList.h" />
+    <ClInclude Include="WinFileUtils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\CppShellExtContextMenuHandler\FileInfo.cpp" />
-    <ClCompile Include="..\CppShellExtContextMenuHandler\FileList.cpp" />
-    <ClCompile Include="..\CppShellExtContextMenuHandler\WinFileUtils.cpp" />
+    <ClCompile Include="FileInfo.cpp" />
+    <ClCompile Include="FileList.cpp" />
+    <ClCompile Include="FileListFactory.cpp" />
+    <ClCompile Include="FileUtils.cpp" />
+    <ClCompile Include="LinuxFileList.cpp" />
+    <ClCompile Include="LinuxFileUtils.cpp" />
+    <ClCompile Include="WinFileList.cpp" />
+    <ClCompile Include="WinFileUtils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

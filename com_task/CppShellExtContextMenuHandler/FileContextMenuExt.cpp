@@ -34,6 +34,8 @@ WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #pragma comment(lib, "shlwapi.lib")
 
 #include "FileInfo.h"
+#include "FileList.h"
+#include "FileListFactory.h"
 
 extern HINSTANCE g_hInst;
 extern long g_cDllRef;
@@ -47,7 +49,8 @@ FileContextMenuExt::FileContextMenuExt(void) : m_cRef(1),
     m_pszVerbCanonicalName("CppDisplayFileName"),
     m_pwszVerbCanonicalName(L"CppDisplayFileName"),
     m_pszVerbHelpText("List files (COM task)"),
-    m_pwszVerbHelpText(L"List files (COM task)")
+    m_pwszVerbHelpText(L"List files (COM task)"),
+	file_list(FileListFactory::getFileList())
 {
     InterlockedIncrement(&g_cDllRef);
 
@@ -98,12 +101,12 @@ void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd)
 	//this->file_list.set_sum_for_each_file();
 	
 	//All work for filling file information fields
-	this->file_list.fill_files_info_and_file();
+	this->file_list->fill_files_info_and_file();
 
     //if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage), 
 	//	L"Selected files are:\r\n\r\n%s", this->file_list.get_readable_list().c_str())))
     //{
-        MessageBox(hWnd, this->file_list.get_readable_list().c_str(), L"List of selected files (COM task)", MB_OK);
+        MessageBox(hWnd, this->file_list->get_readable_list().c_str(), L"List of selected files (COM task)", MB_OK);
 		//DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutDlgProc);
 		//INT_PTR ret = DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, NULL);
 		//if (ret == 0 || ret ==-1){
@@ -189,7 +192,7 @@ IFACEMETHODIMP FileContextMenuExt::Initialize(
 						ARRAYSIZE(m_szSelectedFile)))
 					{
 						//Fill container with paths to all files
-						this->file_list.add_file(FileInfo(m_szSelectedFile));
+						this->file_list->add_file(FileInfo(m_szSelectedFile));
 
 					} else {
 						all_files_ok = false;

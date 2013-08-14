@@ -5,8 +5,8 @@
 #include "FileInfo.h"
 
 FileInfo::FileInfo(std::wstring path): path_(path), size_(0), sum_(0){
-	SYSTEMTIME temp = {0,0,0,0,0,0,0,0};
-	time_ = temp;
+	//SYSTEMTIME temp = {0,0,0,0,0,0,0,0};
+	//time_ = temp;
 }
 
 std::wstring FileInfo::get_readable_size() const{
@@ -24,12 +24,7 @@ std::wstring FileInfo::get_readable_size() const{
 }
 
 std::wstring FileInfo::get_readable_time() const{
-	std::wostringstream ret;
-
-	ret << time_.wMonth << "/" << time_.wDay << "/" << time_.wYear << "\t"
-		<< std::setfill(L'0') << std::setw(2) << time_.wHour << ":" << std::setfill(L'0') << std::setw(2) << time_.wMinute;
-
-	return ret.str();
+	return time_;
 }
 
 std::wstring FileInfo::get_readable_sum() const{
