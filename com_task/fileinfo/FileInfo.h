@@ -6,8 +6,6 @@
 #include <string>
 #include <iostream>
 
-#include <windows.h>
-
 /*
 	Structure with information for one file
 */

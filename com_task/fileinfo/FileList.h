@@ -46,6 +46,8 @@ public:
 	*/
 	virtual void fill_files_info_and_file() = 0;
 
+	virtual ~FileList(){}
+
 protected:
 
 	/*
