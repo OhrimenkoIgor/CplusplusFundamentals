@@ -33,9 +33,7 @@ WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <Shlwapi.h>
 #pragma comment(lib, "shlwapi.lib")
 
-#include "FileInfo.h"
-#include "FileList.h"
-#include "FileListFactory.h"
+#include "FileInfoLib.h"
 
 extern HINSTANCE g_hInst;
 extern long g_cDllRef;
@@ -50,7 +48,7 @@ FileContextMenuExt::FileContextMenuExt(void) : m_cRef(1),
     m_pwszVerbCanonicalName(L"CppDisplayFileName"),
     m_pszVerbHelpText("List files (COM task)"),
     m_pwszVerbHelpText(L"List files (COM task)"),
-	file_list(FileListFactory::getFileList())
+	file_list(FileListCreator::getFileList())
 {
     InterlockedIncrement(&g_cDllRef);
 

@@ -4,6 +4,6 @@
 
 #include "FileInfo.h"
 #include "FileList.h"
-#include "FileListFactory.h"
+#include "FileListCreator.h"
 
 #endif /* FILEINFOLIB_H_ */

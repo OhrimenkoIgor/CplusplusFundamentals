@@ -11,7 +11,7 @@ LDIR =.
 
 LIBS=
 
-_DEPS = FileInfo.h FileList.h FileListCreator.h FileUtils.h LinuxFileList.h LinuxFileUtils.h WinFileList.h WinFileUtils.h LinuxThreadPool.h
+_DEPS = FileInfo.h FileList.h FileListCreator.h FileUtils.h LinuxFileList.h LinuxFileUtils.h WinFileList.h WinFileUtils.h LinuxThreadPool.h FileInfoLib.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 _OBJ = FileInfo.o FileList.o FileListCreator.o FileUtils.o LinuxFileList.o LinuxFileUtils.o WinFileList.o WinFileUtils.o LinuxThreadPool.o

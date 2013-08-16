@@ -128,21 +128,24 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileInfo.h" />
+    <ClInclude Include="FileInfoLib.h" />
     <ClInclude Include="FileList.h" />
-    <ClInclude Include="FileListFactory.h" />
+    <ClInclude Include="FileListCreator.h" />
     <ClInclude Include="FileUtils.h" />
     <ClInclude Include="LinuxFileList.h" />
     <ClInclude Include="LinuxFileUtils.h" />
+    <ClInclude Include="LinuxThreadPool.h" />
     <ClInclude Include="WinFileList.h" />
     <ClInclude Include="WinFileUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FileInfo.cpp" />
     <ClCompile Include="FileList.cpp" />
-    <ClCompile Include="FileListFactory.cpp" />
+    <ClCompile Include="FileListCreator.cpp" />
     <ClCompile Include="FileUtils.cpp" />
     <ClCompile Include="LinuxFileList.cpp" />
     <ClCompile Include="LinuxFileUtils.cpp" />
+    <ClCompile Include="LinuxThreadPool.cpp" />
     <ClCompile Include="WinFileList.cpp" />
     <ClCompile Include="WinFileUtils.cpp" />
   </ItemGroup>
