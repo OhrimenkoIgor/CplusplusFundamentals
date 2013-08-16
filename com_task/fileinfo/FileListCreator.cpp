@@ -1,10 +1,10 @@
 
-#include "FileListFactory.h"
+#include "FileListCreator.h"
 
 #include "WinFileList.h"
 #include "LinuxFileList.h"
  
-FileList * FileListFactory::getFileList(){
+FileList * FileListCreator::getFileList(){
 #ifdef __linux__ 
 	return new LinuxFileList();
 #elif defined _WIN32 || defined _WIN64

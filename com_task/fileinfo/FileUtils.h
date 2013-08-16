@@ -13,6 +13,9 @@ class FileUtils{
 
 public:
 
+	static std::wstring str2wstr(const std::string & str);
+	static std::string wstr2str(const std::wstring & str);
+
 	static uint32_t count_sum(const std::wstring & path);
 
 };

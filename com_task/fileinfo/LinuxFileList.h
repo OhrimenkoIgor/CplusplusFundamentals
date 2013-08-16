@@ -10,7 +10,7 @@ public:
 	virtual void fill_files_info_and_file();
 protected:
 	static void* fill_file_info_callback(void* Parameter);
-	static void* wait_for_sums_callback(void* Parameter);
+	static void* wait_for_sums_thread(void* Parameter);
 
 	struct CallbackParameter;
 	struct SumsCallbackParameter;

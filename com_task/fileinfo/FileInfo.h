@@ -15,7 +15,7 @@ struct FileInfo{
 	std::wstring time_;
 	uint32_t sum_;
 
-	FileInfo(std::wstring path = L"");
+	FileInfo(const std::wstring & path = L"");
 
 	/*
 		Converts file size to readable format and returns the string 

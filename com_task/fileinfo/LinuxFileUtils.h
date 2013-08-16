@@ -12,7 +12,6 @@
 class LinuxFileUtils{	
 
 public:
-	static std::string wstr2str(const std::wstring & str);
 	static std::wstring tm2wstr(const tm & time);
 };
 

@@ -1,7 +1,10 @@
 #if defined __linux__
 
+#include <iostream>
+
 #include <fstream>
 #include <iomanip>
+#include <vector>
 
 #include <pthread.h>
 #include <sys/stat.h>
@@ -12,6 +15,7 @@
 #include "FileUtils.h"
 #include "LinuxFileUtils.h"
 #include "LinuxFileList.h"
+#include "LinuxThreadPool.h"
 
 //structure for thread pool work callback argument
 struct LinuxFileList::CallbackParameter {
@@ -43,7 +47,7 @@ void* LinuxFileList::fill_file_info_callback(void* Parameter) {
 	struct tm modtime;
 
 	//retreive size and creation date
-	int s = stat(LinuxFileUtils::wstr2str(param->p_file_info->path_).c_str(),
+	int s = stat(FileUtils::wstr2str(param->p_file_info->path_).c_str(),
 			&attrib);
 	if (s == -1) {
 		perror("stat");
@@ -70,104 +74,93 @@ void* LinuxFileList::fill_file_info_callback(void* Parameter) {
 	return NULL;
 }
 
-void* LinuxFileList::wait_for_sums_callback(void* Parameter) {
+void* LinuxFileList::wait_for_sums_thread(void* Parameter) {
 	int s;
 	SumsCallbackParameter * param =
 			reinterpret_cast<SumsCallbackParameter *>(Parameter);
 
-	//write info about all files, that are processed by the moment, but info is not written
-	//stop on non-processed file
-	while (param->item_to_write < param->size
-			&& param->arr[param->item_to_write].done) {
-		//capture mutex
-		s = pthread_cond_wait(param->hevent, param->hmutex);
+	while (param->item_to_write < param->size) {
+
+		s = pthread_mutex_lock(param->hmutex);
 		if (s != 0) {
 			errno = s;
-			perror("pthread_cond_wait");
+			perror("pthread_mutex_lock");
 			exit (EXIT_FAILURE);
 		}
-		//one formatted wstring per file info structure
-		(*param->file) << std::setw(128) << std::left
-				<< param->arr[param->item_to_write].file_name << std::setw(20)
-				<< param->arr[param->item_to_write].p_file_info->get_readable_size()
-				<< param->arr[param->item_to_write].p_file_info->get_readable_time()
-				<< "\t"
-				<< param->arr[param->item_to_write].p_file_info->get_readable_sum()
-				<< std::endl;
-		param->item_to_write++;
+
+		//
+		if (!param->arr[param->item_to_write].done) {
+			s = pthread_cond_wait(param->hevent, param->hmutex);
+			if (s != 0) {
+				errno = s;
+				perror("pthread_cond_wait");
+				exit (EXIT_FAILURE);
+			}
+		}
+
+		//write info about all files, that are processed by the moment, but info is not written
+		//stop on non-processed file
+		while (param->item_to_write < param->size
+				&& param->arr[param->item_to_write].done) {
+			//capture mutex
+
+			//one formatted wstring per file info structure
+			(*param->file) << std::setw(128) << std::left
+					<< param->arr[param->item_to_write].file_name
+					<< std::setw(20)
+					<< param->arr[param->item_to_write].p_file_info->get_readable_size()
+					<< param->arr[param->item_to_write].p_file_info->get_readable_time()
+					<< "\t"
+					<< param->arr[param->item_to_write].p_file_info->get_readable_sum()
+					<< std::endl;
+			param->item_to_write++;
+
+		}
+
 		s = pthread_mutex_unlock(param->hmutex);
 		if (s != 0) {
 			errno = s;
 			perror("pthread_mutex_unlock");
 			exit (EXIT_FAILURE);
 		}
+
 	}
+
 	return NULL;
 }
 
-void WinFileList::fill_files_info_and_file() {
-	BOOL bRet = FALSE;
-	PTP_WORK work = NULL;
-	PTP_POOL pool = NULL;
-	PTP_WORK_CALLBACK workcallback = WinFileList::fill_file_info_callback;
-	PTP_WAIT wait = NULL, wait_sums = NULL;
-	PTP_WAIT_CALLBACK wait_sums_callback = WinFileList::wait_for_sums_callback;
-	TP_CALLBACK_ENVIRON CallBackEnviron;
-	PTP_CLEANUP_GROUP cleanupgroup = NULL;
-	HANDLE hEvent, hMutex;
+void LinuxFileList::fill_files_info_and_file() {
 
-	InitializeThreadpoolEnvironment(&CallBackEnviron);
+	int s;
 
-	//mutex for wait callback for synchronyze file write
-	hMutex = CreateMutex(NULL, FALSE, NULL);
-	if (NULL == hMutex) {
-		return;
+	//mutex for conditional variable
+	pthread_mutex_t hMutex;
+	s = pthread_mutex_init(&hMutex, NULL);
+	if (s != 0) {
+		errno = s;
+		perror("pthread_mutex_init");
+		exit (EXIT_FAILURE);
 	}
 
-	//event to trigger wait callback
-	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (NULL == hEvent) {
-		CloseHandle(hMutex);
-		return;
+	//event to trigger wait thread
+	pthread_cond_t hEvent;
+	s = pthread_cond_init(&hEvent, NULL);
+	if (s != 0) {
+		errno = s;
+		perror("pthread_cond_init");
+		exit (EXIT_FAILURE);
 	}
 
-	pool = CreateThreadpool(NULL);
-	if (NULL == pool) {
-		CloseHandle(hEvent);
-		CloseHandle(hMutex);
-		return;
-	}
-
-	SetThreadpoolThreadMaximum(pool, 2);
-	bRet = SetThreadpoolThreadMinimum(pool, 1);
-	if (FALSE == bRet) {
-		CloseHandle(hEvent);
-		CloseHandle(hMutex);
-		CloseThreadpool(pool);
-		return;
-	}
-
-	//group to wait all work tasks
-	cleanupgroup = CreateThreadpoolCleanupGroup();
-	if (NULL == cleanupgroup) {
-		CloseHandle(hEvent);
-		CloseHandle(hMutex);
-		CloseThreadpool(pool);
-		return;
-	}
-
-	SetThreadpoolCallbackPool(&CallBackEnviron, pool);
-	SetThreadpoolCallbackCleanupGroup(&CallBackEnviron, cleanupgroup, NULL);
+	LinuxThreadPool threadPool(2);
 
 	//create file to write information
 	size_t found = files.begin()->second.path_.find_last_of(L"/\\");
 	std::wstring directory = files.begin()->second.path_.substr(0, found + 1);
-	std::wofstream file(directory + L"com_task_2.txt",
+	std::wofstream file(FileUtils::wstr2str(directory + L"com_task_3.txt"),
 			std::wofstream::out | std::wofstream::trunc);
 	if (!file.is_open()) {
-		CloseHandle(hEvent);
-		CloseHandle(hMutex);
-		CloseThreadpool(pool);
+		perror("file.is_open()");
+		exit (EXIT_FAILURE);
 		return;
 	}
 
@@ -178,49 +171,70 @@ void WinFileList::fill_files_info_and_file() {
 	CallbackParameter * params = new CallbackParameter[files.size()]();
 
 	//init wait callback argument
-	SumsCallbackParameter sums_par = { params, files.size(), hEvent, hMutex, 0,
-			&file };
-	wait_sums = CreateThreadpoolWait(wait_sums_callback, &sums_par, NULL);
-	SetThreadpoolWait(wait_sums, hEvent, NULL);
+	SumsCallbackParameter sums_par = { params, files.size(), &hEvent, &hMutex,
+			0, &file };
+
+	pthread_t wait_sums;
+	s = pthread_create(&wait_sums, NULL, LinuxFileList::wait_for_sums_thread,
+			reinterpret_cast<void*>(&sums_par));
+	if (s != 0) {
+		errno = s;
+		perror("pthread_create");
+		exit (EXIT_FAILURE);
+	}
 
 	//iterate the container
 	for (it = files.begin(), i = 0; it != files.end(); it++, i++) {
 
 		//init work callback argument
 		params[i].file_name = it->first;
-		params[i].hevent = hEvent;
+		params[i].hevent = &hEvent;
 		params[i].p_file_info = &it->second;
 
-		work = CreateThreadpoolWork(workcallback, &params[i], &CallBackEnviron);
-		if (NULL == work) {
-			delete[] params;
-			CloseHandle(hEvent);
-			CloseHandle(hMutex);
-			CloseThreadpool(pool);
-			file.close();
-			return;
-		}
+		threadPool.add(LinuxFileList::fill_file_info_callback, &params[i]);
 
-		//submit task to thread pull
-		SubmitThreadpoolWork(work);
-	}
+}
+
+	threadPool.startProcessTasks();
 
 	//wait all work callbacks (fill file_info structures)
-	CloseThreadpoolCleanupGroupMembers(cleanupgroup, FALSE, NULL);
+	threadPool.waitAllTasks();
+
+	//trigger event to call file write callback
+	s = pthread_cond_signal(&hEvent);
+	if (s != 0) {
+		errno = s;
+		perror("pthread_cond_signal");
+		exit (EXIT_FAILURE);
+	}
 
 	//wait all wait callbacks (dump all info to file)
-	WaitForThreadpoolWaitCallbacks(wait_sums, FALSE);
-	SetThreadpoolWait(wait_sums, NULL, NULL);
-	WaitForThreadpoolWaitCallbacks(wait_sums, FALSE);
-	CloseThreadpoolWait(wait_sums);
+	s = pthread_join(wait_sums, NULL);
+	if (s != 0) {
+		errno = s;
+		perror("pthread_join");
+		exit (EXIT_FAILURE);
+	}
+
+	//write all remaining, if conditional signal was lost
+	LinuxFileList::wait_for_sums_thread(&sums_par);
 
 	//clean up
 	delete[] params;
-	CloseHandle(hEvent);
-	CloseHandle(hMutex);
-	// Clean up the cleanup group.
-	CloseThreadpoolCleanupGroup(cleanupgroup);
-	CloseThreadpool(pool);
+	s = pthread_cond_destroy(&hEvent);
+	if (s != 0) {
+		errno = s;
+		perror("pthread_cond_destroy");
+		exit (EXIT_FAILURE);
+	}
+
+	s = pthread_mutex_destroy(&hMutex);
+	if (s != 0) {
+		errno = s;
+		perror("pthread_mutex_destroy");
+		exit (EXIT_FAILURE);
+	}
+
 	file.close();
 	return;
 }
