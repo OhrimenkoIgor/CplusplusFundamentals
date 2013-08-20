@@ -37,5 +37,7 @@ int main(int argc, char *argv[]) {
 
 	wcout << fl->get_readable_list() << endl;
 
+	delete fl;
+
 	return 0;
 }
